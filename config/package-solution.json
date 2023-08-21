@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "wp-bassarit-bunge-client-side-solution",
+    "id": "705b8f6f-74cb-4812-a7f7-06a5ae12ec7f",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.17.4"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "wp-bassarit-bunge description"
+      },
+      "longDescription": {
+        "default": "wp-bassarit-bunge description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "wp-bassarit-bunge Feature",
+        "description": "The feature that activates elements of the wp-bassarit-bunge solution.",
+        "id": "3f56d177-dcac-467a-ac33-9e3b3e455039",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/wp-bassarit-bunge.sppkg"
+  }
+}
