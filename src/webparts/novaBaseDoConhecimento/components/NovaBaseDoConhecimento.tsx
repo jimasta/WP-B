@@ -1,61 +1,251 @@
-import * as React from 'react';
-import styles from './NovaBaseDoConhecimento.module.scss';
-import { INovaBaseDoConhecimentoProps } from './INovaBaseDoConhecimentoProps';
-import { spfi, SPFx as spSPFx } from '@pnp/sp';
+import * as React from "react";
+import { PrimaryButton, TextField } from "@fluentui/react";
+import { DocumentRegular } from "@fluentui/react-icons";
+import { spfi, SPFx as spSPFx } from "@pnp/sp";
 import "@pnp/sp/webs";
 import "@pnp/sp/lists";
 import "@pnp/sp/items";
-import "@pnp/sp/attachments";
+import "@pnp/sp/items/get-all";
+import "@pnp/sp/webs";
+import "@pnp/sp/lists";
+import { INovaBaseDoConhecimentoProps } from "./INovaBaseDoConhecimentoProps";
+import "@pnp/sp/items";
+import styles from "./NovaBaseDoConhecimento.module.scss";
+import {
+  TableBody,
+  TableCell,
+  TableRow,
+  Table,
+  TableHeader,
+  TableHeaderCell,
+  TableCellLayout,
+} from "@fluentui/react-table";
 
-interface ItemList {
-  A: any;
+interface Item {
+  id: number;
+  title: string;
+  grupo: string;
+  vigenciaInicio: string;
+  vigenciaTermino: string;
 }
 
+interface itemTable {
+  nomeDocumento: {
+    label: string;
+    icon: JSX.Element;
+  };
+  grupo: string;
+  vigenciaInicio: string;
+  vigenciaTermino: string;
+}
 
-export default class NovaBaseDoConhecimento extends React.Component<INovaBaseDoConhecimentoProps, {
-  MyItens: any[]; 
-   ShowContent: boolean,}> {
+interface NovaBaseDoConhecimentoState {
+  items: Item[];
+  itemTable: itemTable[];
+  selectedButtons: Set<string>;
+  tiposFiltro: string[];
+  searchValue: string | undefined;
+}
 
-  sp = spfi().using(spSPFx(this.props.spfxContext));
+const columns = [
+  { columnKey: "nomeDocumento", label: "Nome do Documento" },
+  { columnKey: "grupo", label: "Grupo" },
+  { columnKey: "vigenciaInicio", label: "Vigência Início" },
+  { columnKey: "vigenciaTermino", label: "Vigência Término" },
+];
 
-  constructor(props: any) {
+class NovaBaseDoConhecimento extends React.Component<
+  INovaBaseDoConhecimentoProps,
+  NovaBaseDoConhecimentoState
+> {
+  private sp = spfi().using(spSPFx(this.props.spfxContext));
+
+  constructor(props: INovaBaseDoConhecimentoProps) {
     super(props);
+
     this.state = {
-      ShowContent: false,
-      MyItens: [],
-
+      items: [],
+      itemTable: [],
+      selectedButtons: new Set(),
+      tiposFiltro: [],
+      searchValue: "",
     };
-  };
+  }
 
-  public Exemplo = () => {
-    const arrItems: any[] = [];
-    /*Mano deixei aqui uma chamadinha pronta de um exemplo como voce pode buscar os dados ja pegando a lista selecinada no painel de propiedades que ja esta OK */
-    this.sp.web.lists.getById(this.props.listGuid).items()
-      .then(res => {
-        res.map(async (item: any) => {
-          let ItemResult: ItemList = {
-            A: <div>item.Title</div>
+  componentDidMount() {
+    void this.fetchItems();
+  }
 
-          }
-          arrItems.push(ItemResult);
+  fetchItems = async () => {
+    try {
+      const allItems: any[] = await this.sp.web.lists
+        .getById(this.props.listGuid)
+        .items.getAll();
+      const arrItems: itemTable[] = allItems.map(
+        (item: {
+          Id: any;
+          Title: any;
+          Grupo: any;
+          VigenciaInicio: any;
+          VigenciaTermino: any;
+        }) => ({
+          nomeDocumento: { label: item.Title, icon: <DocumentRegular /> },
+          grupo: item.Grupo,
+          vigenciaInicio: item.VigenciaInicio,
+          vigenciaTermino: item.VigenciaTermino,
         })
-        this.setState({ MyItens: arrItems })
-      })
-      .catch(err => {
-        console.log(err);
-      });
+      );
+
+      const tiposFiltroSet = new Set(arrItems.map((item) => item.grupo));
+      const tiposFiltroArray = Array.from(tiposFiltroSet);
+
+      this.setState({ itemTable: arrItems, tiposFiltro: tiposFiltroArray });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
+  handleButtonToggle = (grupo: string) => {
+    this.setState((prevState) => {
+      const selectedButtons = new Set(prevState.selectedButtons);
 
-  public render(): React.ReactElement<INovaBaseDoConhecimentoProps> {
+      const upperCaseGrupo = grupo.toUpperCase();
 
+      if (selectedButtons.has(upperCaseGrupo)) {
+        selectedButtons.delete(upperCaseGrupo);
+      } else {
+        selectedButtons.add(upperCaseGrupo);
+      }
+
+      return { selectedButtons };
+    });
+  };
+
+  renderFilteredItems = () => {
+    const { itemTable, selectedButtons, searchValue } = this.state;
+
+    let filteredItems = itemTable;
+
+    if (selectedButtons.size > 0) {
+      filteredItems = filteredItems.filter((item) =>
+        selectedButtons.has(item.grupo.toUpperCase())
+      );
+    }
+
+    if (searchValue) {
+      filteredItems = filteredItems.filter((item) =>
+        item.nomeDocumento.label
+          .toLowerCase()
+          .includes(searchValue.toLowerCase())
+      );
+    }
+
+    return filteredItems;
+  };
+
+  render() {
+    const filteredItems = this.renderFilteredItems();
+    const { tiposFiltro, selectedButtons } = this.state;
 
     return (
-      <section className={styles.novaBaseDoConhecimento}>
-        <h2>{this.props.Title}</h2>
-        <p>Eae {this.props.userDisplayName}, acredito que daqui voçe consegue seguir !!!</p>
-        {this.state.MyItens}
-      </section>
+      <div className={styles.tableFull}>
+        <TextField
+          className={styles.textInput}
+          placeholder="Pesquise aqui seu documento"
+          value={this.state.searchValue}
+          onChange={(ev, newValue) => this.setState({ searchValue: newValue })}
+        />
+
+        {/* filtros */}
+        <div className={styles.filters}>
+          <div className={styles.firstFilter}>
+            <span className={styles.filterTitles}>{this.props.titleTipos}</span>
+            <div className={styles.filtersBtns}>
+              {tiposFiltro.map((grupo) => (
+                <PrimaryButton
+                  key={grupo}
+                  className={
+                    selectedButtons.has(grupo.toUpperCase())
+                      ? styles.btnSelected
+                      : styles.btnNotSelected
+                  }
+                  onClick={() => this.handleButtonToggle(grupo.toUpperCase())}
+                >
+                  {grupo}
+                </PrimaryButton>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.secondFilter}>
+            <span className={styles.filterTitles}>
+              {this.props.titleAbrangencia}
+            </span>
+            <div className={styles.filtersBtns}>
+              {/* TODO: deixar dinâmico */}
+              <PrimaryButton
+                className={
+                  selectedButtons.has("FEDERAL")
+                    ? styles.btnSelected
+                    : styles.btnNotSelected
+                }
+                onClick={() => this.handleButtonToggle("FEDERAL")}
+              >
+                FEDERAL
+              </PrimaryButton>
+              <PrimaryButton
+                className={
+                  selectedButtons.has("ESTADUAL")
+                    ? styles.btnSelected
+                    : styles.btnNotSelected
+                }
+                onClick={() => this.handleButtonToggle("ESTADUAL")}
+              >
+                ESTADUAL
+              </PrimaryButton>
+            </div>
+          </div>
+        </div>
+
+        {/* tabela */}
+        <Table className={styles.table} arial-label="Nova Base de Conhecimento">
+          <TableHeader className={styles.header}>
+            <TableRow>
+              {columns.map((column) => (
+                <TableHeaderCell
+                  className={styles.headerCell}
+                  key={column.columnKey}
+                >
+                  {column.label}
+                </TableHeaderCell>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredItems.map((item) => (
+              <TableRow
+                key={item.nomeDocumento.label}
+                className={styles.tableRow}
+              >
+                <TableCell className={styles.tableCell}>
+                  <TableCellLayout media={item.nomeDocumento.icon}>
+                    {item.nomeDocumento.label}
+                  </TableCellLayout>
+                </TableCell>
+                <TableCell>
+                  <TableCellLayout>{item.grupo}</TableCellLayout>
+                </TableCell>
+                <TableCell>{item.vigenciaInicio}</TableCell>
+                <TableCell>
+                  <TableCellLayout>{item.vigenciaTermino}</TableCellLayout>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
   }
 }
+
+export default NovaBaseDoConhecimento;

@@ -15,33 +15,28 @@ import { INovaBaseDoConhecimentoProps } from "./components/INovaBaseDoConhecimen
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
 export interface INovaBaseDoConhecimentoWebPartProps {
-  // Title: string;
+  Title:string;
   listGuid: string;
   spfxContext: WebPartContext;
   showContent: boolean;
-  titleTipos: string;
-  titleAbrangencia: string;
 }
 
 export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart<INovaBaseDoConhecimentoWebPartProps> {
   public render(): void {
     const element: React.ReactElement<INovaBaseDoConhecimentoProps> =
       React.createElement(NovaBaseDoConhecimento, {
-        // Title: this.properties.Title,
+        Title: this.properties.Title,
         listGuid: this.properties.listGuid,
         spfxContext: this.context,
         showContent: this.properties.showContent,
         userDisplayName: this.context.pageContext.user.displayName,
-        items: [], // Certifique-se de passar a propriedade 'items' aqui, mesmo que seja um array vazio
-        titleTipos: this.properties.titleTipos,
-        titleAbrangencia: this.properties.titleAbrangencia,
       });
 
     ReactDom.render(element, this.domElement);
   }
 
   /* protected onInit(): Promise<void> {
-
+    
   }*/
 
   protected onDispose(): void {
@@ -57,21 +52,16 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
       pages: [
         {
           header: {
-            description:
-              "Webpart responsável pela tabela da nova base de conhecimento.",
+            description: "",
           },
-          // displayGroupsAsAccordion: true,
+          displayGroupsAsAccordion: true,
           groups: [
             {
               groupName: "Configuraçoes Textuais",
               groupFields: [
-                PropertyPaneTextField("titleTipos", {
-                  label: "Título do filtro Tipos",
-                  description: "Título do filtro Tipos de Documentos",
-                }),
-                PropertyPaneTextField("titleAbrangencia", {
-                  label: "Título do filtro Abrangência",
-                  description: "Título do filtro Abrangência",
+                PropertyPaneTextField("Title", {
+                  label: "Titulo",
+                  description: "*Titulo a ser exibido na Webpart",
                 }),
                 /*PropertyPaneTextField("MsgSuccessTitle", {
                   label: "Titulo Modal de Sucesso",
@@ -101,6 +91,7 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
               ],
             },
           ],
+          
         },
       ],
     };

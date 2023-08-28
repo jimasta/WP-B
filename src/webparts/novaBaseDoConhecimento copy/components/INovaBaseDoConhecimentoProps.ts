@@ -1,11 +1,8 @@
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 export interface INovaBaseDoConhecimentoProps {
-  // Title: string;
+  Title:string;
   listGuid: string;
   spfxContext: WebPartContext;
-  showContent: boolean;
+  showContent:boolean;
   userDisplayName: string;
-  items: any[];
-  titleTipos: string;
-  titleAbrangencia: string;
 }
