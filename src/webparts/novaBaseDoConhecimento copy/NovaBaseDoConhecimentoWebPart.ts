@@ -5,23 +5,25 @@ import {
   IPropertyPaneConfiguration,
   PropertyPaneTextField,
 } from "@microsoft/sp-property-pane";
-import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
+import {
+  BaseClientSideWebPart,
+  WebPartContext,
+} from "@microsoft/sp-webpart-base";
 import {
   PropertyFieldSPListPicker,
   PropertyFieldSPListPickerOrderBy,
 } from "sp-client-custom-fields/lib/PropertyFieldSPListPicker";
 import NovaBaseDoConhecimento from "./components/NovaBaseDoConhecimento";
 import { INovaBaseDoConhecimentoProps } from "./components/INovaBaseDoConhecimentoProps";
-import { WebPartContext } from "@microsoft/sp-webpart-base";
 
 export interface INovaBaseDoConhecimentoWebPartProps {
-  Title:string;
+  Title: string;
   listGuid: string;
   spfxContext: WebPartContext;
   showContent: boolean;
 }
 
-export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart<INovaBaseDoConhecimentoWebPartProps> {
+export default class NovaBaseDoConhecimentoWebPart2 extends BaseClientSideWebPart<INovaBaseDoConhecimentoWebPartProps> {
   public render(): void {
     const element: React.ReactElement<INovaBaseDoConhecimentoProps> =
       React.createElement(NovaBaseDoConhecimento, {
@@ -36,7 +38,7 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
   }
 
   /* protected onInit(): Promise<void> {
-    
+
   }*/
 
   protected onDispose(): void {
@@ -74,7 +76,7 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
               groupName: "Configuraçoes de Lista ",
               groupFields: [
                 PropertyFieldSPListPicker("listGuid", {
-                  label: "Lista Base do Bonhecimento",
+                  label: "Lista Base do Conhecimento",
                   selectedList: this.properties.listGuid,
                   includeHidden: false,
                   orderBy: PropertyFieldSPListPickerOrderBy.Title,
@@ -91,7 +93,6 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
               ],
             },
           ],
-          
         },
       ],
     };

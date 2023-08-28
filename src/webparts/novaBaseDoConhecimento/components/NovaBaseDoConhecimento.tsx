@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import * as React from "react";
 import { PrimaryButton, TextField } from "@fluentui/react";
 import { DocumentRegular } from "@fluentui/react-icons";
@@ -6,10 +7,7 @@ import "@pnp/sp/webs";
 import "@pnp/sp/lists";
 import "@pnp/sp/items";
 import "@pnp/sp/items/get-all";
-import "@pnp/sp/webs";
-import "@pnp/sp/lists";
 import { INovaBaseDoConhecimentoProps } from "./INovaBaseDoConhecimentoProps";
-import "@pnp/sp/items";
 import styles from "./NovaBaseDoConhecimento.module.scss";
 import {
   TableBody,
@@ -29,7 +27,7 @@ interface Item {
   vigenciaTermino: string;
 }
 
-interface itemTable {
+interface IItemTable {
   nomeDocumento: {
     label: string;
     icon: JSX.Element;
@@ -41,7 +39,7 @@ interface itemTable {
 
 interface NovaBaseDoConhecimentoState {
   items: Item[];
-  itemTable: itemTable[];
+  itemTable: IItemTable[];
   selectedButtons: Set<string>;
   tiposFiltro: string[];
   searchValue: string | undefined;
@@ -72,22 +70,24 @@ class NovaBaseDoConhecimento extends React.Component<
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   componentDidMount() {
+    // eslint-disable-next-line no-void
     void this.fetchItems();
   }
 
-  fetchItems = async () => {
+  fetchItems = async (): Promise<void> => {
     try {
-      const allItems: any[] = await this.sp.web.lists
+      const allItems: never[] = await this.sp.web.lists
         .getById(this.props.listGuid)
         .items.getAll();
-      const arrItems: itemTable[] = allItems.map(
+      const arrItems: IItemTable[] = allItems.map(
         (item: {
-          Id: any;
-          Title: any;
-          Grupo: any;
-          VigenciaInicio: any;
-          VigenciaTermino: any;
+          Id: never;
+          Title: never;
+          Grupo: never;
+          VigenciaInicio: never;
+          VigenciaTermino: never;
         }) => ({
           nomeDocumento: { label: item.Title, icon: <DocumentRegular /> },
           grupo: item.Grupo,
@@ -232,11 +232,13 @@ class NovaBaseDoConhecimento extends React.Component<
                     {item.nomeDocumento.label}
                   </TableCellLayout>
                 </TableCell>
-                <TableCell>
+                <TableCell className={styles.tableCell}>
                   <TableCellLayout>{item.grupo}</TableCellLayout>
                 </TableCell>
-                <TableCell>{item.vigenciaInicio}</TableCell>
-                <TableCell>
+                <TableCell className={styles.tableCell}>
+                  {item.vigenciaInicio}
+                </TableCell>
+                <TableCell className={styles.tableCell}>
                   <TableCellLayout>{item.vigenciaTermino}</TableCellLayout>
                 </TableCell>
               </TableRow>

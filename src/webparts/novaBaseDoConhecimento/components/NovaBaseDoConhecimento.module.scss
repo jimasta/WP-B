@@ -22,10 +22,10 @@
 
 .filtersBtns {
   display: flex;
-  width: 100%;
-  justify-content: space-evenly;
-  flex-wrap: wrap;
   flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .firstFilter {
@@ -34,7 +34,7 @@
   flex-wrap: nowrap;
   flex-direction: column;
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 .secondFilter {
@@ -43,7 +43,7 @@
   flex-wrap: nowrap;
   flex-direction: column;
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 .btnNotSelected {
@@ -51,13 +51,11 @@
   font-size: 12px;
   padding: 0;
   margin-top: 2%;
+  margin-right: 2%;
 }
 
 .btnNotSelected:hover {
   background-color: #d28728;
-  font-size: 12px;
-  padding: 0;
-  margin-top: 2%;
 }
 
 .btnSelected {
@@ -65,13 +63,11 @@
   font-size: 12px;
   padding: 0;
   margin-top: 2%;
+  margin-right: 2%;
 }
 
 .btnSelected:hover {
   background-color: #e6aa23;
-  font-size: 12px;
-  padding: 0;
-  margin-top: 2%;
 }
 
 .textInput {
@@ -100,6 +96,7 @@
 
 .tableCell {
   padding-left: 1% !important;
+  overflow-wrap: anywhere;
 }
 
 .tableCell::first-line {
