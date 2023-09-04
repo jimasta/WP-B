@@ -1,3 +1,4 @@
+/* eslint-disable no-void */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import * as React from "react";
 import { PrimaryButton, TextField } from "@fluentui/react";
@@ -19,14 +20,6 @@ import {
   TableCellLayout,
 } from "@fluentui/react-table";
 
-interface Item {
-  id: number;
-  title: string;
-  grupo: string;
-  vigenciaInicio: string;
-  vigenciaTermino: string;
-}
-
 interface IItemTable {
   nomeDocumento: {
     label: string;
@@ -35,22 +28,32 @@ interface IItemTable {
   grupo: string;
   vigenciaInicio: string;
   vigenciaTermino: string;
+  esfera: string;
+  url: string;
+  Estado: string[];
 }
 
 interface NovaBaseDoConhecimentoState {
-  items: Item[];
+  // items: Item[];
   itemTable: IItemTable[];
-  selectedButtons: Set<string>;
+  selectedGrupo: Set<string>;
+  selectedEsferas: Set<string>;
   tiposFiltro: string[];
   searchValue: string | undefined;
+  showContent: boolean;
 }
 
 const columns = [
   { columnKey: "nomeDocumento", label: "Nome do Documento" },
   { columnKey: "grupo", label: "Grupo" },
-  { columnKey: "vigenciaInicio", label: "Vigência Início" },
-  { columnKey: "vigenciaTermino", label: "Vigência Término" },
+  { columnKey: "Vigente_De", label: "Vigência Início" },
+  { columnKey: "Vigente_Ate", label: "Vigência Término" },
 ];
+
+const url = window.location.href;
+const urlSemExtensao = url.replace(/\.aspx$/, "");
+const partesDaURL = urlSemExtensao.split("/");
+let estadoNaURL = partesDaURL.pop() || "";
 
 class NovaBaseDoConhecimento extends React.Component<
   INovaBaseDoConhecimentoProps,
@@ -62,39 +65,57 @@ class NovaBaseDoConhecimento extends React.Component<
     super(props);
 
     this.state = {
-      items: [],
+      showContent: false,
       itemTable: [],
-      selectedButtons: new Set(),
+      selectedGrupo: new Set(),
+      selectedEsferas: new Set(),
       tiposFiltro: [],
       searchValue: "",
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   componentDidMount() {
-    // eslint-disable-next-line no-void
-    void this.fetchItems();
+    if (this.props.listGuid) {
+      void this.fetchItems();
+    }
   }
 
   fetchItems = async (): Promise<void> => {
     try {
-      const allItems: never[] = await this.sp.web.lists
+      const allItems: any[] = await this.sp.web.lists
         .getById(this.props.listGuid)
-        .items.getAll();
-      const arrItems: IItemTable[] = allItems.map(
-        (item: {
-          Id: never;
-          Title: never;
-          Grupo: never;
-          VigenciaInicio: never;
-          VigenciaTermino: never;
-        }) => ({
-          nomeDocumento: { label: item.Title, icon: <DocumentRegular /> },
+        .items.select(
+          "NomeDoc",
+          "Grupo",
+          "Vigente_De",
+          "Vigente_Ate",
+          "Esfera",
+          "Estado",
+          "FileDirRef",
+          "FileRef"
+        )
+        .getAll();
+
+      estadoNaURL = "DF"; //<- Utilizado como teste no workbench, quando produtivo remover linha.
+
+      const itensEstado = allItems.filter((item: IItemTable) => {
+        return this.validaEstado(item.Estado);
+      });
+
+      const arrItems: IItemTable[] = itensEstado.map((item) => {
+        return {
+          nomeDocumento: {
+            label: item.NomeDoc,
+            icon: <DocumentRegular className="svgIcon" />,
+          },
           grupo: item.Grupo,
-          vigenciaInicio: item.VigenciaInicio,
-          vigenciaTermino: item.VigenciaTermino,
-        })
-      );
+          vigenciaInicio: item.Vigente_De,
+          vigenciaTermino: item.Vigente_Ate,
+          esfera: item.Esfera,
+          url: item.FileRef,
+          Estado: item.Estado,
+        };
+      });
 
       const tiposFiltroSet = new Set(arrItems.map((item) => item.grupo));
       const tiposFiltroArray = Array.from(tiposFiltroSet);
@@ -105,47 +126,89 @@ class NovaBaseDoConhecimento extends React.Component<
     }
   };
 
-  handleButtonToggle = (grupo: string) => {
+  validaEstado = (estado: string[]) => {
+    if (estado) {
+      if (estado.includes(estadoNaURL)) {
+        return true;
+      }
+      if (estadoNaURL === "DF" && estado.includes("Federal")) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  handleGrupo = (grupo: string) => {
     this.setState((prevState) => {
-      const selectedButtons = new Set(prevState.selectedButtons);
+      const selectedGrupo = new Set(prevState.selectedGrupo);
 
       const upperCaseGrupo = grupo.toUpperCase();
 
-      if (selectedButtons.has(upperCaseGrupo)) {
-        selectedButtons.delete(upperCaseGrupo);
+      if (selectedGrupo.has(upperCaseGrupo)) {
+        selectedGrupo.delete(upperCaseGrupo);
       } else {
-        selectedButtons.add(upperCaseGrupo);
+        selectedGrupo.add(upperCaseGrupo);
       }
 
-      return { selectedButtons };
+      return { selectedGrupo };
+    });
+  };
+
+  handleAbrangencia = (abrangencia: string) => {
+    this.setState((prevState) => {
+      const selectedEsferas = new Set(prevState.selectedEsferas);
+
+      const upperCaseAbrangencia = abrangencia.toUpperCase();
+
+      if (selectedEsferas.has(upperCaseAbrangencia)) {
+        selectedEsferas.delete(upperCaseAbrangencia);
+      } else {
+        selectedEsferas.add(upperCaseAbrangencia);
+      }
+
+      return { selectedEsferas };
     });
   };
 
   renderFilteredItems = () => {
-    const { itemTable, selectedButtons, searchValue } = this.state;
+    const { itemTable, selectedGrupo, selectedEsferas, searchValue } =
+      this.state;
 
     let filteredItems = itemTable;
 
-    if (selectedButtons.size > 0) {
+    if (selectedGrupo.size > 0) {
       filteredItems = filteredItems.filter((item) =>
-        selectedButtons.has(item.grupo.toUpperCase())
+        selectedGrupo.has(item.grupo.toUpperCase())
+      );
+    }
+    if (selectedEsferas.size > 0) {
+      filteredItems = filteredItems.filter((item) =>
+        selectedEsferas.has(item.esfera.toUpperCase())
       );
     }
 
     if (searchValue) {
-      filteredItems = filteredItems.filter((item) =>
-        item.nomeDocumento.label
-          .toLowerCase()
-          .includes(searchValue.toLowerCase())
-      );
+      filteredItems = filteredItems.filter((item) => {
+        if (item.nomeDocumento.label !== null) {
+          return item.nomeDocumento.label
+            .toLowerCase()
+            .includes(searchValue.toLowerCase());
+        }
+        return false;
+      });
     }
 
     return filteredItems;
   };
 
+  openDocument(url: string) {
+    const documentUrl = `${url}`;
+    window.open(documentUrl, "_blank");
+  }
+
   render() {
     const filteredItems = this.renderFilteredItems();
-    const { tiposFiltro, selectedButtons } = this.state;
+    const { tiposFiltro, selectedGrupo, selectedEsferas } = this.state;
 
     return (
       <div className={styles.tableFull}>
@@ -165,11 +228,11 @@ class NovaBaseDoConhecimento extends React.Component<
                 <PrimaryButton
                   key={grupo}
                   className={
-                    selectedButtons.has(grupo.toUpperCase())
+                    selectedGrupo.has(grupo.toUpperCase())
                       ? styles.btnSelected
                       : styles.btnNotSelected
                   }
-                  onClick={() => this.handleButtonToggle(grupo.toUpperCase())}
+                  onClick={() => this.handleGrupo(grupo.toUpperCase())}
                 >
                   {grupo}
                 </PrimaryButton>
@@ -182,24 +245,23 @@ class NovaBaseDoConhecimento extends React.Component<
               {this.props.titleAbrangencia}
             </span>
             <div className={styles.filtersBtns}>
-              {/* TODO: deixar dinâmico */}
               <PrimaryButton
                 className={
-                  selectedButtons.has("FEDERAL")
+                  selectedEsferas.has("FEDERAL")
                     ? styles.btnSelected
                     : styles.btnNotSelected
                 }
-                onClick={() => this.handleButtonToggle("FEDERAL")}
+                onClick={() => this.handleAbrangencia("FEDERAL")}
               >
                 FEDERAL
               </PrimaryButton>
               <PrimaryButton
                 className={
-                  selectedButtons.has("ESTADUAL")
+                  selectedEsferas.has("ESTADUAL")
                     ? styles.btnSelected
                     : styles.btnNotSelected
                 }
-                onClick={() => this.handleButtonToggle("ESTADUAL")}
+                onClick={() => this.handleAbrangencia("ESTADUAL")}
               >
                 ESTADUAL
               </PrimaryButton>
@@ -224,12 +286,13 @@ class NovaBaseDoConhecimento extends React.Component<
           <TableBody>
             {filteredItems.map((item) => (
               <TableRow
+                onClick={() => this.openDocument(item.url)}
                 key={item.nomeDocumento.label}
                 className={styles.tableRow}
               >
                 <TableCell className={styles.tableCell}>
                   <TableCellLayout media={item.nomeDocumento.icon}>
-                    {item.nomeDocumento.label}
+                    {item.nomeDocumento.label || "Sem título"}
                   </TableCellLayout>
                 </TableCell>
                 <TableCell className={styles.tableCell}>

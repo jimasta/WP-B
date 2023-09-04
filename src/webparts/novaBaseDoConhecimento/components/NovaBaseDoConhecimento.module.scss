@@ -6,6 +6,8 @@
   flex-direction: column;
   justify-content: space-evenly;
   width: 100%;
+  height: inherit;
+  overflow: auto;
 }
 
 .filters {
@@ -85,21 +87,25 @@
   color: white;
 }
 .headerCell {
-  padding: 1% !important;
+  padding: 2% !important;
   font-weight: 500 !important;
 }
 
 .tableRow {
   background-color: #f5f5f5;
   border-bottom: 2px solid transparent !important;
+  cursor: pointer;
 }
 
 .tableCell {
-  padding-left: 1% !important;
   overflow-wrap: anywhere;
 }
 
+.svgIcon {
+  margin-right: 5px;
+}
+
 .tableCell::first-line {
-  padding-left: 1% !important;
+  padding-left: 2% !important;
   width: max-content;
 }

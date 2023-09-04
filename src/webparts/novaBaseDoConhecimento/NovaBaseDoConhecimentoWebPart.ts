@@ -68,10 +68,12 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
                 PropertyPaneTextField("titleTipos", {
                   label: "Título do filtro Tipos",
                   description: "Título do filtro Tipos de Documentos",
+                  value: "Tipos de documentos",
                 }),
                 PropertyPaneTextField("titleAbrangencia", {
                   label: "Título do filtro Abrangência",
                   description: "Título do filtro Abrangência",
+                  value: "Abrangência",
                 }),
                 /*PropertyPaneTextField("MsgSuccessTitle", {
                   label: "Titulo Modal de Sucesso",
