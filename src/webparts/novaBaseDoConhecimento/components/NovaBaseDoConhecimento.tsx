@@ -44,10 +44,10 @@ interface NovaBaseDoConhecimentoState {
 }
 
 const columns = [
-  { columnKey: "nomeDocumento", label: "Nome do Documento" },
-  { columnKey: "grupo", label: "Grupo" },
-  { columnKey: "Vigente_De", label: "Vigência Início" },
-  { columnKey: "Vigente_Ate", label: "Vigência Término" },
+  { Key: "nomeDocumento", label: "Nome do Documento", minWidth: 380, maxWidth: 700, isResizable: true},
+  { Key: "grupo", label: "Grupo", minWidth: 80, maxWidth: 240, isResizable: true},
+  { Key: "Vigente_De", label: "Vigência Início", minWidth: 80, maxWidth: 240, isResizable: true},
+  { Key: "Vigente_Ate", label: "Vigência Término", minWidth: 80, maxWidth: 240, isResizable: true },
 ];
 
 const url = window.location.href;
@@ -106,7 +106,7 @@ class NovaBaseDoConhecimento extends React.Component<
         return {
           nomeDocumento: {
             label: item.NomeDoc,
-            icon: <DocumentRegular className="svgIcon" />,
+            icon: <DocumentRegular className={styles.svgIcon} />,
           },
           grupo: item.Grupo,
           vigenciaInicio: item.Vigente_De,
@@ -276,7 +276,7 @@ class NovaBaseDoConhecimento extends React.Component<
               {columns.map((column) => (
                 <TableHeaderCell
                   className={styles.headerCell}
-                  key={column.columnKey}
+                  key={column.Key}
                 >
                   {column.label}
                 </TableHeaderCell>
@@ -291,7 +291,7 @@ class NovaBaseDoConhecimento extends React.Component<
                 className={styles.tableRow}
               >
                 <TableCell className={styles.tableCell}>
-                  <TableCellLayout media={item.nomeDocumento.icon}>
+                  <TableCellLayout  media={item.nomeDocumento.icon}>
                     {item.nomeDocumento.label || "Sem título"}
                   </TableCellLayout>
                 </TableCell>

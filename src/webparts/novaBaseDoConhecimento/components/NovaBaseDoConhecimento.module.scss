@@ -50,10 +50,12 @@
 
 .btnNotSelected {
   background-color: #e6aa23;
-  font-size: 12px;
+  font-size: 14px;
   padding: 0;
-  margin-top: 2%;
+  margin-top: 1%;
   margin-right: 2%;
+  border-radius: 3px;
+  border-style: none;
 }
 
 .btnNotSelected:hover {
@@ -62,10 +64,12 @@
 
 .btnSelected {
   background-color: #d28728;
-  font-size: 12px;
+  font-size: 14px;
   padding: 0;
-  margin-top: 2%;
+  margin-top: 1%;
   margin-right: 2%;
+  border-radius: 3px;
+  border-style: none;
 }
 
 .btnSelected:hover {
@@ -74,12 +78,12 @@
 
 .textInput {
   width: 100%;
-  padding: 1% !important;
+  //padding: 1% !important;
   margin-bottom: 1% !important;
 }
 
 .table {
-  margin-top: 1rem;
+  margin-top: 8px;
 }
 
 .header {
@@ -87,22 +91,25 @@
   color: white;
 }
 .headerCell {
-  padding: 2% !important;
+  padding: 8px !important;
   font-weight: 500 !important;
+  padding-left: 12px !important;
 }
 
 .tableRow {
   background-color: #f5f5f5;
   border-bottom: 2px solid transparent !important;
   cursor: pointer;
+  height: 50px;
 }
 
 .tableCell {
-  overflow-wrap: anywhere;
+  //overflow-wrap: anywhere;
+  padding-left: 8px !important;
 }
 
 .svgIcon {
-  margin-right: 5px;
+  margin-right: 8px !important;
 }
 
 .tableCell::first-line {

@@ -45,6 +45,7 @@ export default class NovaBaseDoConhecimentoTable extends React.Component<
         name: "Coluna 1",
         fieldName: "someField",
         minWidth: 100,
+        maxWidth: 600, 
       },
       // Adicione mais colunas conforme necessário
     ];
