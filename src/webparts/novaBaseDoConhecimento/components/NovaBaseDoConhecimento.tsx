@@ -53,7 +53,10 @@ const columns = [
 const url = window.location.href;
 const urlSemExtensao = url.replace(/\.aspx$/, "");
 const partesDaURL = urlSemExtensao.split("/");
-let estadoNaURL = partesDaURL.pop() || "";
+//let estadoNaURL = partesDaURL.pop() || "";
+let estadoNaURL = partesDaURL[6].split(".")[0]
+console.log(estadoNaURL);
+
 
 class NovaBaseDoConhecimento extends React.Component<
   INovaBaseDoConhecimentoProps,
@@ -93,13 +96,14 @@ class NovaBaseDoConhecimento extends React.Component<
           "Estado",
           "FileDirRef",
           "FileRef"
-        )
-        .getAll();
+        ).filter(`Estado eq '${estadoNaURL}' or Estado eq 'Todas as UFs'`)();
 
-      estadoNaURL = "DF"; //<- Utilizado como teste no workbench, quando produtivo remover linha.
+        console.log(allItems);
+        
+
 
       const itensEstado = allItems.filter((item: IItemTable) => {
-        return this.validaEstado(item.Estado);
+        return item.Estado
       });
 
       const arrItems: IItemTable[] = itensEstado.map((item) => {
@@ -126,7 +130,7 @@ class NovaBaseDoConhecimento extends React.Component<
     }
   };
 
-  validaEstado = (estado: string[]) => {
+  /*validaEstado = (estado: string[]) => {
     if (estado) {
       if (estado.includes(estadoNaURL)) {
         return true;
@@ -136,7 +140,7 @@ class NovaBaseDoConhecimento extends React.Component<
       }
     }
     return false;
-  };
+  };*/
 
   handleGrupo = (grupo: string) => {
     this.setState((prevState) => {

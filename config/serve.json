@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
-  "port": 4321,
+  "port": 4421,
   "https": true,
   "initialPage": "https://bungeltd.sharepoint.com/sites/bbsgaspartax/_layouts/15/workbench.aspx"
 }
