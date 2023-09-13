@@ -96,7 +96,7 @@ class NovaBaseDoConhecimento extends React.Component<
           "Estado",
           "FileDirRef",
           "FileRef"
-        ).filter(`Estado eq '${estadoNaURL}' or Estado eq 'Todas as UFs'`)();
+        ).filter(`Estado eq '${estadoNaURL}' or Estado eq 'Todas as UFs'`).top(5000)();
 
         console.log(allItems);
         
