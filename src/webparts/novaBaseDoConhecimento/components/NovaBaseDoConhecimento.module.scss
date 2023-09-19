@@ -4,10 +4,86 @@
   align-items: flex-start;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 1300px;
+}
+
+.tableFull .table {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: space-evenly;
+}
+
+.tableFull .table .header {
+  background-color: #3c647d;
+  color: white;
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+.tableFull .table .header .tableRow{
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-evenly;
+  flex-wrap: nowrap;
+}
+
+.tableFull .table .header .headerCell {
+  padding: 8px !important;
+  font-weight: 500 !important;
+  padding-left: 12px !important;
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.tableFull .table .tableBody  {
+    overflow: auto;
+    width: auto;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    height: 1000px;
+}
+
+.tableFull .table .tableBody .tableRow {
+  background-color: #f5f5f5;
+  border-bottom: 2px solid transparent!important;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   justify-content: space-evenly;
   width: 100%;
-  height: inherit;
-  overflow: auto;
+}
+
+.tableFull .table .tableBody .tableRow:hover{
+background-color: white;
+}
+
+.tableFull .table .tableBody .tableRow .tableCell {
+  padding-left: 8px !important;
+  display: flex;
+  width: 100%;
+}
+
+.tableFull .table .tableBody .tableRow .tableCell .tableCellLayout{
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.firstColumn{
+  width: 200% !important;
 }
 
 .filters {
@@ -82,37 +158,6 @@
   margin-bottom: 1% !important;
 }
 
-.table {
-  margin-top: 8px;
-}
-
-.header {
-  background-color: #3c647d;
-  color: white;
-}
-.headerCell {
-  padding: 8px !important;
-  font-weight: 500 !important;
-  padding-left: 12px !important;
-}
-
-.tableRow {
-  background-color: #f5f5f5;
-  border-bottom: 2px solid transparent !important;
-  cursor: pointer;
-  height: 50px;
-}
-
-.tableCell {
-  //overflow-wrap: anywhere;
-  padding-left: 8px !important;
-}
-
 .svgIcon {
   margin-right: 8px !important;
-}
-
-.tableCell::first-line {
-  padding-left: 2% !important;
-  width: max-content;
 }

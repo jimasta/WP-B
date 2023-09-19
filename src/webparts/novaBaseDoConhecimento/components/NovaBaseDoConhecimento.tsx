@@ -44,17 +44,17 @@ interface NovaBaseDoConhecimentoState {
 }
 
 const columns = [
-  { Key: "nomeDocumento", label: "Nome do Documento", minWidth: 380, maxWidth: 700, isResizable: true},
-  { Key: "grupo", label: "Grupo", minWidth: 80, maxWidth: 240, isResizable: true},
-  { Key: "Vigente_De", label: "Vigência Início", minWidth: 80, maxWidth: 240, isResizable: true},
+  { Key: "nomeDocumento", label: "Nome do Documento", minWidth: 380, maxWidth: 700, isResizable: true },
+  { Key: "grupo", label: "Grupo", minWidth: 80, maxWidth: 240, isResizable: true },
+  { Key: "Vigente_De", label: "Vigência Início", minWidth: 80, maxWidth: 240, isResizable: true },
   { Key: "Vigente_Ate", label: "Vigência Término", minWidth: 80, maxWidth: 240, isResizable: true },
 ];
 
 const url = window.location.href;
 const urlSemExtensao = url.replace(/\.aspx$/, "");
 const partesDaURL = urlSemExtensao.split("/");
-//let estadoNaURL = partesDaURL.pop() || "";
-let estadoNaURL = partesDaURL[6].split(".")[0]
+//let estadoNaURL = partesDaURL.pop() || ""; // PRD -> urlReal
+let estadoNaURL = partesDaURL[6].split(".")[0] //HML -> ?debug
 console.log(estadoNaURL);
 
 
@@ -98,8 +98,8 @@ class NovaBaseDoConhecimento extends React.Component<
           "FileRef"
         ).filter(`Estado eq '${estadoNaURL}' or Estado eq 'Todas as UFs'`).top(5000)();
 
-        console.log(allItems);
-        
+      console.log(allItems);
+
 
 
       const itensEstado = allItems.filter((item: IItemTable) => {
@@ -130,29 +130,15 @@ class NovaBaseDoConhecimento extends React.Component<
     }
   };
 
-  /*validaEstado = (estado: string[]) => {
-    if (estado) {
-      if (estado.includes(estadoNaURL)) {
-        return true;
-      }
-      if (estadoNaURL === "DF" && estado.includes("Federal")) {
-        return true;
-      }
-    }
-    return false;
-  };*/
-
   handleGrupo = (grupo: string) => {
     this.setState((prevState) => {
-      const selectedGrupo = new Set(prevState.selectedGrupo);
+      const selectedGrupo = new Set<string>();
 
-      const upperCaseGrupo = grupo.toUpperCase();
-
-      if (selectedGrupo.has(upperCaseGrupo)) {
-        selectedGrupo.delete(upperCaseGrupo);
-      } else {
-        selectedGrupo.add(upperCaseGrupo);
+      if (prevState.selectedGrupo.has(grupo.toUpperCase())) {
+        return { selectedGrupo };
       }
+
+      selectedGrupo.add(grupo.toUpperCase());
 
       return { selectedGrupo };
     });
@@ -160,15 +146,13 @@ class NovaBaseDoConhecimento extends React.Component<
 
   handleAbrangencia = (abrangencia: string) => {
     this.setState((prevState) => {
-      const selectedEsferas = new Set(prevState.selectedEsferas);
+      const selectedEsferas = new Set<string>();
 
-      const upperCaseAbrangencia = abrangencia.toUpperCase();
-
-      if (selectedEsferas.has(upperCaseAbrangencia)) {
-        selectedEsferas.delete(upperCaseAbrangencia);
-      } else {
-        selectedEsferas.add(upperCaseAbrangencia);
+      if (prevState.selectedEsferas.has(abrangencia.toUpperCase())) {
+        return { selectedEsferas };
       }
+
+      selectedEsferas.add(abrangencia.toUpperCase());
 
       return { selectedEsferas };
     });
@@ -276,26 +260,24 @@ class NovaBaseDoConhecimento extends React.Component<
         {/* tabela */}
         <Table className={styles.table} arial-label="Nova Base de Conhecimento">
           <TableHeader className={styles.header}>
-            <TableRow>
+            <TableRow className={styles.tableRow}>
               {columns.map((column) => (
                 <TableHeaderCell
-                  className={styles.headerCell}
-                  key={column.Key}
-                >
+                  className={column.Key === 'nomeDocumento' ? `${styles.firstColumn} ${styles.headerCell}` : styles.headerCell}
+                  key={column.Key}>
                   {column.label}
                 </TableHeaderCell>
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className={styles.tableBody}>
             {filteredItems.map((item) => (
               <TableRow
                 onClick={() => this.openDocument(item.url)}
                 key={item.nomeDocumento.label}
-                className={styles.tableRow}
-              >
-                <TableCell className={styles.tableCell}>
-                  <TableCellLayout  media={item.nomeDocumento.icon}>
+                className={`${styles.tableRow}`}>
+                <TableCell className={`${styles.tableCell} ${styles.firstColumn}`}>
+                  <TableCellLayout media={item.nomeDocumento.icon}>
                     {item.nomeDocumento.label || "Sem título"}
                   </TableCellLayout>
                 </TableCell>
