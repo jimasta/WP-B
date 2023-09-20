@@ -1,4 +1,4 @@
-/* eslint-disable no-void */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import * as React from "react";
 import { PrimaryButton, TextField } from "@fluentui/react";
@@ -34,13 +34,14 @@ interface IItemTable {
 }
 
 interface NovaBaseDoConhecimentoState {
-  // items: Item[];
   itemTable: IItemTable[];
   selectedGrupo: Set<string>;
   selectedEsferas: Set<string>;
   tiposFiltro: string[];
-  searchValue: string | undefined;
+  searchValue: string;
+  handleSearch: boolean;
   showContent: boolean;
+  filteredItems: IItemTable[],
 }
 
 const columns = [
@@ -53,10 +54,8 @@ const columns = [
 const url = window.location.href;
 const urlSemExtensao = url.replace(/\.aspx$/, "");
 const partesDaURL = urlSemExtensao.split("/");
-//let estadoNaURL = partesDaURL.pop() || ""; // PRD -> urlReal
-let estadoNaURL = partesDaURL[6].split(".")[0] //HML -> ?debug
-console.log(estadoNaURL);
-
+const estadoNaURL = partesDaURL.pop() || ""; // PRD -> urlReal
+// const estadoNaURL = partesDaURL[6].split(".")[0] //HML -> ?debug
 
 class NovaBaseDoConhecimento extends React.Component<
   INovaBaseDoConhecimentoProps,
@@ -74,12 +73,18 @@ class NovaBaseDoConhecimento extends React.Component<
       selectedEsferas: new Set(),
       tiposFiltro: [],
       searchValue: "",
+      handleSearch: false,
+      filteredItems: [],
     };
   }
 
   componentDidMount() {
     if (this.props.listGuid) {
-      void this.fetchItems();
+      this.fetchItems().then(() => {
+        this.setState({ showContent: true });
+      }).catch((error) => {
+        console.log(error);
+      });
     }
   }
 
@@ -97,10 +102,6 @@ class NovaBaseDoConhecimento extends React.Component<
           "FileDirRef",
           "FileRef"
         ).filter(`Estado eq '${estadoNaURL}' or Estado eq 'Todas as UFs'`).top(5000)();
-
-      console.log(allItems);
-
-
 
       const itensEstado = allItems.filter((item: IItemTable) => {
         return item.Estado
@@ -124,38 +125,73 @@ class NovaBaseDoConhecimento extends React.Component<
       const tiposFiltroSet = new Set(arrItems.map((item) => item.grupo));
       const tiposFiltroArray = Array.from(tiposFiltroSet);
 
-      this.setState({ itemTable: arrItems, tiposFiltro: tiposFiltroArray });
+      this.setState({ itemTable: arrItems, tiposFiltro: tiposFiltroArray, filteredItems: arrItems });
     } catch (error) {
       console.log(error);
     }
   };
 
   handleGrupo = (grupo: string) => {
-    this.setState((prevState) => {
-      const selectedGrupo = new Set<string>();
+    this.setState(
+      (prevState) => {
+        const selectedGrupo = new Set(prevState.selectedGrupo);
 
-      if (prevState.selectedGrupo.has(grupo.toUpperCase())) {
-        return { selectedGrupo };
+        if (selectedGrupo.has(grupo.toUpperCase())) {
+          selectedGrupo.delete(grupo.toUpperCase());
+        } else {
+          selectedGrupo.clear();
+          selectedGrupo.add(grupo.toUpperCase());
+        }
+
+        return { selectedGrupo, searchValue: "" };
+      },
+      () => {
+        this.renderFilteredItems();
       }
-
-      selectedGrupo.add(grupo.toUpperCase());
-
-      return { selectedGrupo };
-    });
+    );
   };
 
   handleAbrangencia = (abrangencia: string) => {
-    this.setState((prevState) => {
-      const selectedEsferas = new Set<string>();
+    this.setState(
+      (prevState) => {
+        const selectedEsferas = new Set<string>();
 
-      if (prevState.selectedEsferas.has(abrangencia.toUpperCase())) {
-        return { selectedEsferas };
+        if (prevState.selectedEsferas.has(abrangencia.toUpperCase())) {
+          return { selectedEsferas, searchValue: "" };
+        }
+
+        selectedEsferas.add(abrangencia.toUpperCase());
+
+        if (prevState.handleSearch) {
+          return { selectedEsferas, searchValue: "" };
+        }
+
+        return { selectedEsferas, searchValue: prevState.searchValue };
+      },
+      () => {
+        this.renderFilteredItems();
       }
+    );
+  };
 
-      selectedEsferas.add(abrangencia.toUpperCase());
+  handleSearch = () => {
+    this.setState(
+      (prevState) => {
+        const { selectedGrupo, selectedEsferas } = prevState;
 
-      return { selectedEsferas };
-    });
+        selectedGrupo.clear();
+        selectedEsferas.clear();
+
+        return {
+          selectedGrupo,
+          selectedEsferas,
+          handleSearch: true,
+        };
+      },
+      () => {
+        this.renderFilteredItems();
+      }
+    );
   };
 
   renderFilteredItems = () => {
@@ -165,14 +201,14 @@ class NovaBaseDoConhecimento extends React.Component<
     let filteredItems = itemTable;
 
     if (selectedGrupo.size > 0) {
+      this.setState({ searchValue: '' });
       filteredItems = filteredItems.filter((item) =>
-        selectedGrupo.has(item.grupo.toUpperCase())
-      );
+        selectedGrupo.has(item.grupo.toUpperCase()))
     }
     if (selectedEsferas.size > 0) {
+      this.setState({ searchValue: '' });
       filteredItems = filteredItems.filter((item) =>
-        selectedEsferas.has(item.esfera.toUpperCase())
-      );
+        selectedEsferas.has(item.esfera.toUpperCase()))
     }
 
     if (searchValue) {
@@ -186,6 +222,7 @@ class NovaBaseDoConhecimento extends React.Component<
       });
     }
 
+    this.setState({ filteredItems });
     return filteredItems;
   };
 
@@ -195,7 +232,6 @@ class NovaBaseDoConhecimento extends React.Component<
   }
 
   render() {
-    const filteredItems = this.renderFilteredItems();
     const { tiposFiltro, selectedGrupo, selectedEsferas } = this.state;
 
     return (
@@ -204,7 +240,11 @@ class NovaBaseDoConhecimento extends React.Component<
           className={styles.textInput}
           placeholder="Pesquise aqui seu documento"
           value={this.state.searchValue}
-          onChange={(ev, newValue) => this.setState({ searchValue: newValue })}
+          onChange={(ev, newValue: string) => {
+            this.setState({ searchValue: newValue }, () => {
+              this.handleSearch(); // A busca de texto está limpando os botões;
+            });
+          }}
         />
 
         {/* filtros */}
@@ -271,27 +311,39 @@ class NovaBaseDoConhecimento extends React.Component<
             </TableRow>
           </TableHeader>
           <TableBody className={styles.tableBody}>
-            {filteredItems.map((item) => (
-              <TableRow
-                onClick={() => this.openDocument(item.url)}
-                key={item.nomeDocumento.label}
-                className={`${styles.tableRow}`}>
-                <TableCell className={`${styles.tableCell} ${styles.firstColumn}`}>
-                  <TableCellLayout media={item.nomeDocumento.icon}>
-                    {item.nomeDocumento.label || "Sem título"}
-                  </TableCellLayout>
-                </TableCell>
-                <TableCell className={styles.tableCell}>
-                  <TableCellLayout>{item.grupo}</TableCellLayout>
-                </TableCell>
-                <TableCell className={styles.tableCell}>
-                  {item.vigenciaInicio}
-                </TableCell>
-                <TableCell className={styles.tableCell}>
-                  <TableCellLayout>{item.vigenciaTermino}</TableCellLayout>
+            {this.state.filteredItems.length > 0 ? (
+              this.state.filteredItems.map((item, index) => (
+                <TableRow
+                  onClick={() => this.openDocument(item.url)}
+                  key={index}
+                  className={`${styles.tableRow}`}>
+                  <TableCell className={`${styles.tableCell} ${styles.firstColumn}`}>
+                    <TableCellLayout media={item.nomeDocumento.icon}>
+                      {item.nomeDocumento.label || "Sem título"}
+                    </TableCellLayout>
+                  </TableCell>
+                  <TableCell className={styles.tableCell}>
+                    <TableCellLayout>{item.grupo}</TableCellLayout>
+                  </TableCell>
+                  <TableCell className={styles.tableCell}>
+                    {item.vigenciaInicio}
+                  </TableCell>
+                  <TableCell className={styles.tableCell}>
+                    <TableCellLayout>{item.vigenciaTermino}</TableCellLayout>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow className={`${styles.tableRow} ${styles.noResults}`}>
+                <TableCell colSpan={4}>
+                  {this.state.filteredItems.length === 0 && !this.state.showContent ? (
+                    `Carregando...`
+                  ) : (
+                    `Nenhum resultado encontrado`
+                  )}
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
