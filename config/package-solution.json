@@ -3,7 +3,7 @@
   "solution": {
     "name": "wp-bassarit-bunge-client-side-solution",
     "id": "705b8f6f-74cb-4812-a7f7-06a5ae12ec7f",
-    "version": "1.0.0.0",
+    "version": "1.0.0.2",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,

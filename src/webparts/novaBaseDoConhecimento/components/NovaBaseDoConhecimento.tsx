@@ -1,4 +1,4 @@
-/* eslint-disable no-void */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import * as React from "react";
 import { PrimaryButton, TextField } from "@fluentui/react";
@@ -34,26 +34,28 @@ interface IItemTable {
 }
 
 interface NovaBaseDoConhecimentoState {
-  // items: Item[];
   itemTable: IItemTable[];
   selectedGrupo: Set<string>;
   selectedEsferas: Set<string>;
   tiposFiltro: string[];
-  searchValue: string | undefined;
+  searchValue: string;
+  handleSearch: boolean;
   showContent: boolean;
+  filteredItems: IItemTable[],
 }
 
 const columns = [
-  { columnKey: "nomeDocumento", label: "Nome do Documento" },
-  { columnKey: "grupo", label: "Grupo" },
-  { columnKey: "Vigente_De", label: "Vigência Início" },
-  { columnKey: "Vigente_Ate", label: "Vigência Término" },
+  { Key: "nomeDocumento", label: "Nome do Documento", minWidth: 380, maxWidth: 700, isResizable: true },
+  { Key: "grupo", label: "Grupo", minWidth: 80, maxWidth: 240, isResizable: true },
+  { Key: "Vigente_De", label: "Vigência Início", minWidth: 80, maxWidth: 240, isResizable: true },
+  { Key: "Vigente_Ate", label: "Vigência Término", minWidth: 80, maxWidth: 240, isResizable: true },
 ];
 
 const url = window.location.href;
 const urlSemExtensao = url.replace(/\.aspx$/, "");
 const partesDaURL = urlSemExtensao.split("/");
-let estadoNaURL = partesDaURL.pop() || "";
+const estadoNaURL = partesDaURL.pop() || ""; // PRD -> urlReal
+// const estadoNaURL = partesDaURL[6].split(".")[0] //HML -> ?debug
 
 class NovaBaseDoConhecimento extends React.Component<
   INovaBaseDoConhecimentoProps,
@@ -71,12 +73,18 @@ class NovaBaseDoConhecimento extends React.Component<
       selectedEsferas: new Set(),
       tiposFiltro: [],
       searchValue: "",
+      handleSearch: false,
+      filteredItems: [],
     };
   }
 
   componentDidMount() {
     if (this.props.listGuid) {
-      void this.fetchItems();
+      this.fetchItems().then(() => {
+        this.setState({ showContent: true });
+      }).catch((error) => {
+        console.log(error);
+      });
     }
   }
 
@@ -93,20 +101,17 @@ class NovaBaseDoConhecimento extends React.Component<
           "Estado",
           "FileDirRef",
           "FileRef"
-        )
-        .getAll();
-
-      estadoNaURL = "DF"; //<- Utilizado como teste no workbench, quando produtivo remover linha.
+        ).filter(`Estado eq '${estadoNaURL}' or Estado eq 'Todas as UFs'`).top(5000)();
 
       const itensEstado = allItems.filter((item: IItemTable) => {
-        return this.validaEstado(item.Estado);
+        return item.Estado
       });
 
       const arrItems: IItemTable[] = itensEstado.map((item) => {
         return {
           nomeDocumento: {
             label: item.NomeDoc,
-            icon: <DocumentRegular className="svgIcon" />,
+            icon: <DocumentRegular className={styles.svgIcon} />,
           },
           grupo: item.Grupo,
           vigenciaInicio: item.Vigente_De,
@@ -120,54 +125,73 @@ class NovaBaseDoConhecimento extends React.Component<
       const tiposFiltroSet = new Set(arrItems.map((item) => item.grupo));
       const tiposFiltroArray = Array.from(tiposFiltroSet);
 
-      this.setState({ itemTable: arrItems, tiposFiltro: tiposFiltroArray });
+      this.setState({ itemTable: arrItems, tiposFiltro: tiposFiltroArray, filteredItems: arrItems });
     } catch (error) {
       console.log(error);
     }
   };
 
-  validaEstado = (estado: string[]) => {
-    if (estado) {
-      if (estado.includes(estadoNaURL)) {
-        return true;
-      }
-      if (estadoNaURL === "DF" && estado.includes("Federal")) {
-        return true;
-      }
-    }
-    return false;
-  };
-
   handleGrupo = (grupo: string) => {
-    this.setState((prevState) => {
-      const selectedGrupo = new Set(prevState.selectedGrupo);
+    this.setState(
+      (prevState) => {
+        const selectedGrupo = new Set(prevState.selectedGrupo);
 
-      const upperCaseGrupo = grupo.toUpperCase();
+        if (selectedGrupo.has(grupo.toUpperCase())) {
+          selectedGrupo.delete(grupo.toUpperCase());
+        } else {
+          selectedGrupo.clear();
+          selectedGrupo.add(grupo.toUpperCase());
+        }
 
-      if (selectedGrupo.has(upperCaseGrupo)) {
-        selectedGrupo.delete(upperCaseGrupo);
-      } else {
-        selectedGrupo.add(upperCaseGrupo);
+        return { selectedGrupo, searchValue: "" };
+      },
+      () => {
+        this.renderFilteredItems();
       }
-
-      return { selectedGrupo };
-    });
+    );
   };
 
   handleAbrangencia = (abrangencia: string) => {
-    this.setState((prevState) => {
-      const selectedEsferas = new Set(prevState.selectedEsferas);
+    this.setState(
+      (prevState) => {
+        const selectedEsferas = new Set<string>();
 
-      const upperCaseAbrangencia = abrangencia.toUpperCase();
+        if (prevState.selectedEsferas.has(abrangencia.toUpperCase())) {
+          return { selectedEsferas, searchValue: "" };
+        }
 
-      if (selectedEsferas.has(upperCaseAbrangencia)) {
-        selectedEsferas.delete(upperCaseAbrangencia);
-      } else {
-        selectedEsferas.add(upperCaseAbrangencia);
+        selectedEsferas.add(abrangencia.toUpperCase());
+
+        if (prevState.handleSearch) {
+          return { selectedEsferas, searchValue: "" };
+        }
+
+        return { selectedEsferas, searchValue: prevState.searchValue };
+      },
+      () => {
+        this.renderFilteredItems();
       }
+    );
+  };
 
-      return { selectedEsferas };
-    });
+  handleSearch = () => {
+    this.setState(
+      (prevState) => {
+        const { selectedGrupo, selectedEsferas } = prevState;
+
+        selectedGrupo.clear();
+        selectedEsferas.clear();
+
+        return {
+          selectedGrupo,
+          selectedEsferas,
+          handleSearch: true,
+        };
+      },
+      () => {
+        this.renderFilteredItems();
+      }
+    );
   };
 
   renderFilteredItems = () => {
@@ -177,14 +201,14 @@ class NovaBaseDoConhecimento extends React.Component<
     let filteredItems = itemTable;
 
     if (selectedGrupo.size > 0) {
+      this.setState({ searchValue: '' });
       filteredItems = filteredItems.filter((item) =>
-        selectedGrupo.has(item.grupo.toUpperCase())
-      );
+        selectedGrupo.has(item.grupo.toUpperCase()))
     }
     if (selectedEsferas.size > 0) {
+      this.setState({ searchValue: '' });
       filteredItems = filteredItems.filter((item) =>
-        selectedEsferas.has(item.esfera.toUpperCase())
-      );
+        selectedEsferas.has(item.esfera.toUpperCase()))
     }
 
     if (searchValue) {
@@ -198,6 +222,7 @@ class NovaBaseDoConhecimento extends React.Component<
       });
     }
 
+    this.setState({ filteredItems });
     return filteredItems;
   };
 
@@ -207,7 +232,6 @@ class NovaBaseDoConhecimento extends React.Component<
   }
 
   render() {
-    const filteredItems = this.renderFilteredItems();
     const { tiposFiltro, selectedGrupo, selectedEsferas } = this.state;
 
     return (
@@ -216,7 +240,11 @@ class NovaBaseDoConhecimento extends React.Component<
           className={styles.textInput}
           placeholder="Pesquise aqui seu documento"
           value={this.state.searchValue}
-          onChange={(ev, newValue) => this.setState({ searchValue: newValue })}
+          onChange={(ev, newValue: string) => {
+            this.setState({ searchValue: newValue }, () => {
+              this.handleSearch(); // A busca de texto está limpando os botões;
+            });
+          }}
         />
 
         {/* filtros */}
@@ -272,40 +300,50 @@ class NovaBaseDoConhecimento extends React.Component<
         {/* tabela */}
         <Table className={styles.table} arial-label="Nova Base de Conhecimento">
           <TableHeader className={styles.header}>
-            <TableRow>
+            <TableRow className={styles.tableRow}>
               {columns.map((column) => (
                 <TableHeaderCell
-                  className={styles.headerCell}
-                  key={column.columnKey}
-                >
+                  className={column.Key === 'nomeDocumento' ? `${styles.firstColumn} ${styles.headerCell}` : styles.headerCell}
+                  key={column.Key}>
                   {column.label}
                 </TableHeaderCell>
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {filteredItems.map((item) => (
-              <TableRow
-                onClick={() => this.openDocument(item.url)}
-                key={item.nomeDocumento.label}
-                className={styles.tableRow}
-              >
-                <TableCell className={styles.tableCell}>
-                  <TableCellLayout media={item.nomeDocumento.icon}>
-                    {item.nomeDocumento.label || "Sem título"}
-                  </TableCellLayout>
-                </TableCell>
-                <TableCell className={styles.tableCell}>
-                  <TableCellLayout>{item.grupo}</TableCellLayout>
-                </TableCell>
-                <TableCell className={styles.tableCell}>
-                  {item.vigenciaInicio}
-                </TableCell>
-                <TableCell className={styles.tableCell}>
-                  <TableCellLayout>{item.vigenciaTermino}</TableCellLayout>
+          <TableBody className={styles.tableBody}>
+            {this.state.filteredItems.length > 0 ? (
+              this.state.filteredItems.map((item, index) => (
+                <TableRow
+                  onClick={() => this.openDocument(item.url)}
+                  key={index}
+                  className={`${styles.tableRow}`}>
+                  <TableCell className={`${styles.tableCell} ${styles.firstColumn}`}>
+                    <TableCellLayout media={item.nomeDocumento.icon}>
+                      {item.nomeDocumento.label || "Sem título"}
+                    </TableCellLayout>
+                  </TableCell>
+                  <TableCell className={styles.tableCell}>
+                    <TableCellLayout>{item.grupo}</TableCellLayout>
+                  </TableCell>
+                  <TableCell className={styles.tableCell}>
+                    {item.vigenciaInicio}
+                  </TableCell>
+                  <TableCell className={styles.tableCell}>
+                    <TableCellLayout>{item.vigenciaTermino}</TableCellLayout>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow className={`${styles.tableRow} ${styles.noResults}`}>
+                <TableCell colSpan={4}>
+                  {this.state.filteredItems.length === 0 && !this.state.showContent ? (
+                    `Carregando...`
+                  ) : (
+                    `Nenhum resultado encontrado`
+                  )}
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>

@@ -15,10 +15,9 @@ import { INovaBaseDoConhecimentoProps } from "./components/INovaBaseDoConhecimen
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
 export interface INovaBaseDoConhecimentoWebPartProps {
-  // Title: string;
-  listGuid: string;
   spfxContext: WebPartContext;
   showContent: boolean;
+  listGuid: string;
   titleTipos: string;
   titleAbrangencia: string;
 }
@@ -27,22 +26,17 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
   public render(): void {
     const element: React.ReactElement<INovaBaseDoConhecimentoProps> =
       React.createElement(NovaBaseDoConhecimento, {
-        // Title: this.properties.Title,
         listGuid: this.properties.listGuid,
         spfxContext: this.context,
         showContent: this.properties.showContent,
         userDisplayName: this.context.pageContext.user.displayName,
-        items: [], // Certifique-se de passar a propriedade 'items' aqui, mesmo que seja um array vazio
-        titleTipos: this.properties.titleTipos,
-        titleAbrangencia: this.properties.titleAbrangencia,
+        items: [],
+        titleTipos: this.properties.titleTipos || "Tipos de documentos",
+        titleAbrangencia: this.properties.titleAbrangencia || "Abrangência",
       });
 
     ReactDom.render(element, this.domElement);
   }
-
-  /* protected onInit(): Promise<void> {
-
-  }*/
 
   protected onDispose(): void {
     ReactDom.unmountComponentAtNode(this.domElement);
@@ -60,7 +54,6 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
             description:
               "Webpart responsável pela tabela da nova base de conhecimento.",
           },
-          // displayGroupsAsAccordion: true,
           groups: [
             {
               groupName: "Configuraçoes Textuais",
@@ -68,12 +61,12 @@ export default class NovaBaseDoConhecimentoWebPart extends BaseClientSideWebPart
                 PropertyPaneTextField("titleTipos", {
                   label: "Título do filtro Tipos",
                   description: "Título do filtro Tipos de Documentos",
-                  value: "Tipos de documentos",
+                  value: this.properties.titleTipos,
                 }),
                 PropertyPaneTextField("titleAbrangencia", {
                   label: "Título do filtro Abrangência",
                   description: "Título do filtro Abrangência",
-                  value: "Abrangência",
+                  value: this.properties.titleAbrangencia,
                 }),
                 /*PropertyPaneTextField("MsgSuccessTitle", {
                   label: "Titulo Modal de Sucesso",
