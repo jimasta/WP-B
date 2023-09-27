@@ -31,6 +31,7 @@ interface IItemTable {
   esfera: string;
   url: string;
   Estado: string[];
+  Tags:string;
 }
 
 interface NovaBaseDoConhecimentoState {
@@ -54,8 +55,8 @@ const columns = [
 const url = window.location.href;
 const urlSemExtensao = url.replace(/\.aspx$/, "");
 const partesDaURL = urlSemExtensao.split("/");
-const estadoNaURL = partesDaURL.pop() || ""; // PRD -> urlReal
-// const estadoNaURL = partesDaURL[6].split(".")[0] //HML -> ?debug
+//const estadoNaURL = partesDaURL.pop() || ""; // PRD -> urlReal
+const estadoNaURL = partesDaURL[6].split(".")[0] //HML -> ?debug
 
 class NovaBaseDoConhecimento extends React.Component<
   INovaBaseDoConhecimentoProps,
@@ -92,7 +93,8 @@ class NovaBaseDoConhecimento extends React.Component<
     try {
       const allItems: any[] = await this.sp.web.lists
         .getById(this.props.listGuid)
-        .items.select(
+        .items.orderBy("Created", false).select(
+          "Created",
           "NomeDoc",
           "Grupo",
           "Vigente_De",
@@ -100,7 +102,8 @@ class NovaBaseDoConhecimento extends React.Component<
           "Esfera",
           "Estado",
           "FileDirRef",
-          "FileRef"
+          "FileRef",
+          "Tags"
         ).filter(`Estado eq '${estadoNaURL}' or Estado eq 'Todas as UFs'`).top(5000)();
 
       const itensEstado = allItems.filter((item: IItemTable) => {
@@ -119,11 +122,14 @@ class NovaBaseDoConhecimento extends React.Component<
           esfera: item.Esfera,
           url: item.FileRef,
           Estado: item.Estado,
+          Tags:item.Tags,
+          
         };
       });
 
       const tiposFiltroSet = new Set(arrItems.map((item) => item.grupo));
       const tiposFiltroArray = Array.from(tiposFiltroSet);
+      console.log(arrItems);
 
       this.setState({ itemTable: arrItems, tiposFiltro: tiposFiltroArray, filteredItems: arrItems });
     } catch (error) {
@@ -210,13 +216,11 @@ class NovaBaseDoConhecimento extends React.Component<
       filteredItems = filteredItems.filter((item) =>
         selectedEsferas.has(item.esfera.toUpperCase()))
     }
-
     if (searchValue) {
       filteredItems = filteredItems.filter((item) => {
-        if (item.nomeDocumento.label !== null) {
-          return item.nomeDocumento.label
-            .toLowerCase()
-            .includes(searchValue.toLowerCase());
+        if (item.nomeDocumento.label !== null  ) {
+         console.log(item.Tags);
+          return  item.nomeDocumento.label.toLowerCase().includes(searchValue.toLowerCase()) || item.Tags.toLowerCase().includes(searchValue.toLowerCase()) 
         }
         return false;
       });
